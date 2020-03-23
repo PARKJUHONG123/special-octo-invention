@@ -284,6 +284,99 @@ public:
 };
 
 class strassen_class {
+private:
+	int size;
+	int **A, **B, **C;
+
+public:
+	strassen_class() : size(2) {
+		srand(time(NULL));
+		A = new int* [size];
+		B = new int* [size];
+		C = new int* [size];
+
+		for (int i = 0; i < size; i++) {
+			A[i] = new int[size];
+			B[i] = new int[size];
+			C[i] = new int[size];
+
+			for (int j = 0; j < size; j++) {
+				A[i][j] = rand() % 4 + 1;
+				B[i][j] = rand() % 4 + 1;
+				C[i][j] = -1;
+			}
+		}
+	}
+
+	~strassen_class() {
+		delete_class();
+	}
+
+	void delete_class() {
+		for (int i = 0; i < size; i++) {
+			delete[]A[i];
+			delete[]B[i];
+			delete[]C[i];
+		}
+
+		delete[]A;
+		delete[]B;
+		delete[]C;
+	}
+	
+	void print_matrix(int** matrix_a, int** matrix_b, int** matrix_c) {
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				cout << matrix_a[i][j] << " ";
+			}
+			cout << "   ";
+			for (int j = 0; j < size; j++) {
+				cout << matrix_b[i][j] << " ";
+			}
+			cout << "   ";
+			for (int j = 0; j < size; j++) {
+				cout << matrix_c[i][j] << " ";
+			}
+			cout << endl;
+		}
+	}
+
+	void ordinary_mult() {
+		// 8 times multiplication and 4 times addition
+		int sum = 0, k = 0;
+		for (int i = 0; i < size; i++) {
+			while (k != size) {
+				for (int j = 0; j < size; j++) {
+					sum += A[i][j] * B[j][k];
+				}
+				C[i][k] = sum;
+				sum = 0;
+				k++;
+			}
+			k = 0;
+		}
+	}
+
+	void strassen_mult() {
+		int M1, M2, M3, M4, M5, M6, M7;
+		M1 = (A[0][0] + B[1][1]) * (B[0][0] + B[1][1]);
+		M2 = (A[1][0] + A[1][1]) * B[0][0];
+		M3 = A[0][0] * (B[0][1] - B[1][1]);
+		M4 = A[1][1] * (B[1][0] - B[0][0]);
+		M5 = (A[0][0] + A[0][1]) * B[1][1];
+		M6 = (A[1][0] - A[0][0]) * (B[0][0] + B[0][1]);
+		M7 = (A[0][1] - A[1][1]) * (B[1][0] + B[1][1]);
+
+		C[0][0] = M1 + M4 - M5 + M7;
+		C[0][1] = M3 + M5;
+		C[1][0] = M2 + M4;
+		C[1][1] = M1 - M2 + M3 + M6;
+	}
+
+	void main() {
+		strassen_mult();
+		print_matrix(A, B, C);
+	}
 
 };
 
@@ -302,6 +395,9 @@ int main() {
 
 	quick_class qc = quick_class();
 	qc.main();
+
+	strassen_class sc = strassen_class();
+	sc.main();
 	end = clock();
 
 	printf("%f ms", double(double(end) - double(start)));
