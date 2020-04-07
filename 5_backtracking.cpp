@@ -157,7 +157,33 @@ public:
 			while (1) {
 				count = 0; //첫번 째 줄부터 시작
 				while (count <= n - 5 && temp != 0) {			// 아래 과정을 n-5 번까지만 (즉 5줄이 남게) 하고, 남은 퀸의 갯수가 0이 아닌 동안 반복
-					temp = n; // 남은 퀸의 갯수
+					temp = n; // 퀸이 들어갈 수 있는 남은 자리
+
+					/*
+					0 1 2 3 4 5 6 7
+					1 O O O O X O O
+					2
+					3
+					4
+					5
+					6
+					7					
+					일 경우 2번째 줄에서 4, 5, 6만을 제외하면 모든 곳에 퀸이 있을 수 있기 때문에
+					CHECK[5] 와 CHECK[5-1] 와 CHECK[5+1] 을 활성화시킨다.
+					
+
+					0 1 2 3 4 5 6 7
+					1 O O O O X O O
+					2 X O O O O O O
+					3
+					4
+					5
+					6
+					7
+					일 경우 3번째 줄에서 1, 2 그리고 3, 5, 7만을 제외하면 모든 곳에 퀸이 있을 수 있기 때문에
+					CHECK[1] 과 CHECK[1+1] (CHECK[1-1] 은 범위에서 벗어나기에 제외) 그리고 CHECK[5] 와 CHECK[5-2], CHECK[5+2] 을 활성화시킨다.
+					*/
+
 
 					for (int i = 1; i <= count; i++) {
 						if (check[col[i]] != 1) { // 퀸을 배치하고 그 지역은 이제 차지되었음
@@ -172,65 +198,122 @@ public:
 							check[col[i] + ((count + 1) - i)] = 1;
 							temp--;
 						}
-						for (int i = 1; i <= n; i++) {
-							cout << col[i] << " ";
-						}
-						cout << endl;
 					}
 
-					if (temp == 0)
+					// 다음 줄에서 퀸이 들어갈 수 있는 남은 자리가 없으므로 = 실패한 형태
+					if (temp == 0) {
 						break;
-					num = rand() % temp + 1;				//make random number
+					}
+
+					// 랜덤하게 생성한 값 (1 ~ temp)
+					num = rand() % temp + 1; 
+
+					// 만약에 랜덤한게 생성한 값이 이미 다른 퀸들에 의해 영향을 받는 곳이라면, 
 					if (check[num] == 1) {
 						for (j = 1; j <= n; j++) {
+
+							/*
+							check[4, 5, 6] = 1 일 때, temp 는 4이므로 num 은 1에서 4 사이
+							0 1 2 3 4 5 6 7
+							1 O O O O X O O
+							2 O O O T T T O
+							3
+							4
+							5
+							6
+							7
+							
+							(num = 4 로 시작)
+							j = 1	num = 3
+							j = 2	num = 2
+							j = 3	num = 1
+							j = 4	num = 1
+							j = 5	num = 1
+							j = 6	num = 1
+							j = 7	num = 0
+
+							결국에는 col[count + 1] = 7 가 들어가게 된다
+							즉 num 이 1, 2, 3 일 때는 if (check[num] == 1) 문을 거치지 않고 바로 등록 가능하고,
+							num 이 4 일 때는 if 문을 거쳐서 남은 공간에 할당 가능하다.
+
+
+							check[2, 3, 4] = 1 일 때, temp 는 4이므로 num 은 1에서 4 사이
+							0 1 2 3 4 5 6 7
+							1 O O X O O O O
+							2 O T T T O O O
+							3
+							4
+							5
+							6
+							7
+
+							(num = 4 로 시작)
+							j = 1	num = 3
+							j = 2	num = 3
+							j = 3	num = 3
+							j = 4	num = 3
+							j = 5	num = 2
+							j = 6	num = 1
+							j = 7	num = 0
+							col[count + 1] = 7
+							
+							(num = 3 로 시작)
+							j = 1	num = 2
+							j = 2	num = 2
+							j = 3	num = 2
+							j = 4	num = 2
+							j = 5	num = 1
+							j = 6	num = 0
+							j = 7	...
+							col[count + 1] = 6
+
+							(num = 2 로 시작)
+							j = 1	num = 1
+							j = 2	num = 1
+							j = 3	num = 1
+							j = 4	num = 1
+							j = 5	num = 0
+							j = 6	...
+							j = 7	...
+							col[count + 1] = 5
+							
+							즉 num = 1, 2, 3, 4 일 때 차례대로 크기에 따라 남은 공간에 할당이 된다.
+
+							*/
+
 							if (num == 0) break;
+							// 만약에 j 가 이미 다른 퀸들에 의해 영향을 받는 곳이라면, num 값은 유지된다
+							// 만약에 j 가 괜찮은 곳이라면, num 값은 1 줄어든다.
 							if (check[j] == 1) num++;
 							num--;
 						}
+						// 다음 줄 (count + 1) 에 j - 1 값을 넣는다.
 						col[count + 1] = j - 1;
 					}
-					else col[count + 1] = num;
-					for (int i = 1; i <= n; i++)
+					// 만약에 랜덤하게 생성한 값이 괜찮은 곳이라면, 다음 줄 (count + 1) 에 그 랜덤값을 넣는다
+					else {
+						col[count + 1] = num;
+					}
+
+					// 다음 줄에서 퀸이 있을 수 있을 수 있는 자리를 찾기 위해 다시 CHECK 를 초기화
+					for (int i = 1; i <= n; i++) {
 						check[i] = 0;
-					count++; //count 줄의 queen의 배치가 끝났음
+					}
+
+					//count + 1 줄의 queen의 배치가 끝났음
+					count++;
 				}
-				if (temp == 0) { // 실패한 경우
+
+				// 실패한 경우, 모든 값을 RESET 하여 처음부터 다시 시작
+				if (temp == 0) { 
 					for (int i = 1; i <= n; i++)
 						check[i] = 0;
 					temp = n;
 					continue;
 				}
-
-				queens(count - 1, col, n); 			//n개 중에서 5개빼고
-
-
+				// n개 중에서 5개빼고
+				queens(count - 1, col, n); 			
 			}
-			/*
-			while (1) {
-				count_col = 0;
-				while (count_col <= n - 5 && left_queen != 0) {
-					left_queen = n;
-					for (int i = 1; i <= count_col; i++) {
-						if (check[col[i]] != true) {
-							check[col[i]] = true;
-							left_queen--;
-						}
-						if ((count_col + 1) - i < col[i] && check[col[i] - ((count_col + 1) - i)] != true)
-					}
-
-
-
-				}
-				if (left_queen == 0) {
-					for (int i = 1; i <= n; i++) {
-						check[i] = 0;
-					}
-					left_queen = n;
-					continue;
-				}
-				queens(count_col - 1, col, n);
-			}
-			*/
 		}
 	}
 };
