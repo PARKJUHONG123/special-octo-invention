@@ -15,6 +15,7 @@ class n_queens_dynamic {
 private:
 	int n = -1;
 	int* col = nullptr;
+	bool print_out = false;
 
 public:
 	n_queens_dynamic() {
@@ -60,12 +61,15 @@ public:
 
 	void queens(int i, int* col, int n) {
 		int j = 1; //index
+		if (print_out == true) return;
+
 		if (promising(i, col) == true) {
 			if (i == n) { // 가득 차면 모두 프린트한다
 				for (j = 1; j <= n; j++) {
 					printf("%d ", col[j]);
 				}
 				printf("\n");
+				print_out = true;
 				return;
 			}
 			else {
@@ -90,6 +94,7 @@ private:
 	int n = -1;
 	int* col = nullptr;
 	bool* check = nullptr;
+	bool print_out = false;
 
 public:
 	n_queens_monte_carlo() {
@@ -130,13 +135,15 @@ public:
 	}
 
 	void queens(int i, int* col, int n) {
+		if (print_out == true) return;
+
 		if (promising(i, col)) {
 			if (i == n) {
 				for (int k = 1; k <= i; k++) {
 					cout << col[k] << " ";
 				}
 				cout << endl;
-				exit(1);
+				print_out = true;
 			}
 			else {
 				for (int j = 1; j <= n; j++){
@@ -148,7 +155,6 @@ public:
 	}
 
 	void main() {
-//		int count_col = 0, left_queen = 1;
 		int count = 0, temp = 1, num = 0, j = 0;
 		if (n <= 5) {
 			queens(0, col, n);
@@ -312,18 +318,108 @@ public:
 					continue;
 				}
 				// n개 중에서 5개빼고
-				queens(count - 1, col, n); 			
+				queens(count - 1, col, n);
+				if (print_out == true) {
+					break;
+				}
 			}
 		}
 	}
 };
 
 class sum_of_subsets {
+private:
+	int n = -1, W = -1, weight = 0, total = 0;
+	int* w = nullptr;
+	bool* include = nullptr;
+
+public:
+	sum_of_subsets() {
+		FILE* in = NULL;
+		fopen_s(&in, "input_file\\subsets_input.txt", "r");
+
+		if (in == NULL) {
+			printf("file open error\n");
+			exit(1);
+		}
+		fscanf_s(in, "%d %d", &n, &W);
+		w = new int[n + 1];
+		include = new bool[n + 1];
+
+		for (int i = 1; i <= n; i++) {
+			fscanf_s(in, "%d", &w[i]);
+			total += w[i];
+			include[i] = false;
+		}
+		fclose(in);
+		sort(w, n);
+
+	}
+
+	~sum_of_subsets() {
+		delete[]w;
+	}
+
+	void sort(int* w, int n) {
+		int temp = -1;
+		for (int i = 1; i <= n; i++) {
+			for (int j = i + 1; j <= n; j++) {
+				if (w[i] > w[j]) {
+					temp = w[i];
+					w[i] = w[j];
+					w[j] = temp;
+				}
+			}
+		}
+	}
+
+	bool promising(int i, int weight, int total) {
+		return (weight + total >= W) && (weight == W || weight + w[i + 1] <= W);
+	}
+
+	void sum_subsets(int i, int weight, int total) {
+		if (promising(i, weight, total)) {
+			if (weight == W) {
+				cout << "{ ";
+				for (int j = 1; j <= n; j++) {
+					if (include[j]) cout << w[j] << " ";
+				}
+				cout << "}" << endl;
+			}
+			else {
+				include[i + 1] = true;
+				sum_subsets(i + 1, weight + w[i + 1], total - w[i + 1]);
+				include[i + 1] = false;
+				sum_subsets(i + 1, weight, total - w[i + 1]);
+			}
+		}
+	}
+
+	void main() {
+		sum_subsets(0, weight, total);
+	}
 
 };
 
 class graph_coloring {
+private:
 
+public:
+	graph_coloring() {
+
+	}
+
+	~graph_coloring() {
+
+	}
+
+	bool promising(int i) {
+
+	}
+
+	void m_coloring(int i) {
+
+	}
 };
 
 class hamilton_circuits {
@@ -335,21 +431,7 @@ class knapsack{
 };
 
 int main() {
-	n_queens_dynamic test_1 = n_queens_dynamic();
-	n_queens_monte_carlo test_2 = n_queens_monte_carlo();
-	clock_t start_d, end_d,	start_m, end_m;
-
-	start_d = clock();
-	test_1.main();
-	end_d = clock();
-	start_m = clock();
-	test_2.main();
-	end_m = clock();
-
-	cout << "n_queens_dynamic : ";
-	printf("%f\n", (double)(end_d - start_d));
-	cout << "n_queens_monte_carlo : ";
-	printf("%f", (double)(end_m - start_m));
-
+	sum_of_subsets test = sum_of_subsets();
+	test.main();
 	return 0;
 }
