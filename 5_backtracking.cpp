@@ -403,35 +403,267 @@ public:
 
 class graph_coloring {
 private:
+	int** W = nullptr;
+	int* vcolor = nullptr;
+	int n = -1;
 
 public:
 	graph_coloring() {
+		FILE* in = NULL;
+		fopen_s(&in, "input_file\\graph_coloring_input.txt", "r");
+		if (in == NULL) {
+			cout << "file open error";
+			exit(1);
+		}
+		fscanf_s(in, "%d", &n);
 
+		W = new int* [n + 1];
+		vcolor = new int[n + 1];
+		for (int i = 0; i <= n; i++) {
+			W[i] = new int[n + 1];
+			vcolor[i] = 0;
+		}
+
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= n; j++) {
+				fscanf_s(in, "%d", &W[i][j]);
+			}
+		}
+
+		fclose(in);
 	}
 
 	~graph_coloring() {
-
+		for (int i = 0; i <= n; i++) {
+			delete[] W[i];
+		}
+		delete[] W;
 	}
 
 	bool promising(int i) {
-
+		int j = 1;
+		bool result = true;
+		while (j < i) {
+			if (W[i][j] != 0 && vcolor[i] == vcolor[j]) {
+				result = false;
+			}
+			j++;
+		}
+		return result;
 	}
 
 	void m_coloring(int i) {
+		if (promising(i)) {
+			if (i == n) {
+				for (int j = 1; j <= n; j++) {
+					cout << vcolor[j] << " ";
+				}
+				cout << endl;
+			}
+			else {
+				for (int color = 1; color <= n; color++) {
+					vcolor[i + 1] = color;
+					m_coloring(i + 1);
+				}
+			}
+		}
+	}
 
+	void main() {
+		m_coloring(0);
 	}
 };
 
-class hamilton_circuits {
+class hamilton_circuits_with_dyanmic_programming {
+private:
+	int** W;
+	int* index_vertex;
+	int n = -1;
 
+public:
+	hamilton_circuits_with_dyanmic_programming() {
+		FILE* in = NULL;
+		fopen_s(&in, "input_file\\hamilton_input.txt", "r");
+		if (in == NULL) {
+			cout << "file open error";
+			exit(1);
+		}
+		fscanf_s(in, "%d", &n);
+
+		W = new int* [n + 1];
+		index_vertex = new int[n + 1];
+		for (int i = 0; i <= n; i++) {
+			W[i] = new int[n + 1];
+			index_vertex[i] = 0;
+		}
+
+		for (int i = 1; i <= n; i++) {
+			for (int j = 1; j <= n; j++) {
+				fscanf_s(in, "%d", &W[i][j]);
+			}
+		}
+	}
+
+	~hamilton_circuits_with_dyanmic_programming() {
+		delete[]index_vertex;
+		for (int i = 0; i <= n; i++) {
+			delete[]W[i];
+		}
+		delete[]W;
+	}
+
+	bool promising(int i) {
+		bool result = true;
+		if (i == n && W[index_vertex[n]][index_vertex[1]] == 0) {
+			result = false;
+		}
+		else if (i > 1 && W[index_vertex[i - 1]][index_vertex[i]] == 0) {
+			result = false;
+		}
+		else {
+			int j = 1;
+			while (j < i && result) {
+				if (index_vertex[i] == index_vertex[j]) {
+					result = false;
+				}
+				j++;
+			}
+		}
+		return result;
+	}
+
+	void hamilton(int i) {
+		if (promising(i)) {
+			if (i == n) {
+				for (int j = 1; j <= n; j++) {
+					cout << index_vertex[j] << " ";
+				}
+				cout << endl;
+			}
+			else {
+				for (int j = 1; j <= n; j++) {
+					index_vertex[i + 1] = j;
+					hamilton(i + 1);
+				}
+			}
+		}
+	}
+
+	void main() {
+		hamilton(0);
+	}
 };
 
 class knapsack{
+private:
+	struct product {
+		int w; //weight
+		int p; //profit
+		int p_w; //profit per weight
+	};
+	product* prod;
+	int n;
+	int W;
+	bool* include, *bestset;
 
+	int numbest = 0, maxprofit = 0;
+	int bound = 0, total_weight = 0;
+
+public:
+	knapsack() {
+		FILE* in = NULL;
+		fopen_s(&in, "input_file\\knapsack_input.txt", "r");
+		if (in == NULL) {
+			cout << "file open error";
+			exit(1);
+		}
+		fscanf_s(in, "%d %d", &n, &W);
+		prod = new product[n + 1];
+		include = new bool[n + 1];
+		
+		for (int i = 1; i <= n; i++) {
+			fscanf_s(in, "%d", &(prod[i].p));
+			include[i] = false;
+		}
+
+		for (int i = 1; i <= n; i++) {
+			fscanf_s(in, "%d", &(prod[i].w));
+			prod[i].p_w = prod[i].p / prod[i].w;
+		}
+
+		fclose(in);
+		sort();
+	}
+
+	~knapsack() {
+		delete[]prod;
+	}
+
+	void sort() {
+		product temp;
+		for (int i = 1; i <= n; i++) {
+			for (int j = i + 1; j <= n; j++) {
+				if (prod[i].p_w < prod[j].p_w) {
+					temp = prod[i];
+					prod[i] = prod[j];
+					prod[j] = temp;
+				}
+			}
+		}
+	}
+
+	bool promising(int i, int profit, int weight) {
+		bool result = true;
+		int j = 1;
+
+		if (weight >= W) {
+			result = false;
+		}
+		else {
+			j = i + 1;
+			bound = profit;
+			total_weight = weight;
+
+			while (j <= n && total_weight + prod[j].w <= W) {
+				total_weight = total_weight + prod[j].w;
+				bound = bound + prod[j].p;
+				j++;
+			}
+			int k = j;
+
+			if (k <= n) {
+				bound += (W - total_weight) * prod[k].p_w;
+				result = (bound > maxprofit ? true : false);
+			}
+		}
+		return result;
+	}
+
+	void knapsack_function(int i, int profit, int weight) {
+		if (weight <= W && profit > maxprofit) {
+			maxprofit = profit;
+			numbest = i;
+			bestset = include;
+		}
+
+		if (promising(i, profit, weight)) {
+			include[i + 1] = true;
+			knapsack_function(i + 1, profit + prod[i + 1].p, weight + prod[i + 1].w);
+
+			include[i + 1] = false;
+			knapsack_function(i + 1, profit, weight);
+		}
+	}
+
+	void main() {
+		knapsack_function(0, 0, 0);
+		cout << maxprofit << endl;
+	}
 };
 
+
 int main() {
-	sum_of_subsets test = sum_of_subsets();
+	knapsack test = knapsack();
 	test.main();
 	return 0;
 }
