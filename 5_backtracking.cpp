@@ -564,10 +564,8 @@ private:
 	product* prod;
 	int n;
 	int W;
-	bool* include, *bestset;
-
-	int numbest = 0, maxprofit = 0;
-	int bound = 0, total_weight = 0;
+	bool* include, *best_include;
+	int max_approach = 0, max_profit = 0;
 
 public:
 	knapsack() {
@@ -580,10 +578,12 @@ public:
 		fscanf_s(in, "%d %d", &n, &W);
 		prod = new product[n + 1];
 		include = new bool[n + 1];
-		
+		best_include = new bool[n + 1];
+
 		for (int i = 1; i <= n; i++) {
 			fscanf_s(in, "%d", &(prod[i].p));
 			include[i] = false;
+			best_include[i] = false;
 		}
 
 		for (int i = 1; i <= n; i++) {
@@ -613,7 +613,8 @@ public:
 	}
 
 	bool promising(int i, int profit, int weight) {
-		bool result = true;
+		int bound = 0, total_weight = 0;
+		bool result = false;
 		int j = 1;
 
 		if (weight >= W) {
@@ -629,21 +630,22 @@ public:
 				bound = bound + prod[j].p;
 				j++;
 			}
-			int k = j;
 
-			if (k <= n) {
-				bound += (W - total_weight) * prod[k].p_w;
-				result = (bound > maxprofit ? true : false);
+			if (j <= n) {
+				bound += (W - total_weight) * prod[j].p_w;
+				result = (bound > max_profit ? true : false);
 			}
 		}
 		return result;
 	}
 
 	void knapsack_function(int i, int profit, int weight) {
-		if (weight <= W && profit > maxprofit) {
-			maxprofit = profit;
-			numbest = i;
-			bestset = include;
+		if (weight <= W && profit > max_profit) {
+			max_profit = profit;
+			max_approach = i;
+			for (int j = 1; j <= n; j++) {
+				best_include[j] = include[j];
+			}
 		}
 
 		if (promising(i, profit, weight)) {
@@ -657,7 +659,11 @@ public:
 
 	void main() {
 		knapsack_function(0, 0, 0);
-		cout << maxprofit << endl;
+		cout << "MAX PROFIT : " << max_profit << endl;
+		cout << "MAX APPROACH : " << max_approach << endl;
+		for (int i = 1; i <= n; i++) {
+			cout << (best_include[i] ? "T" : "F") << " ";
+		}
 	}
 };
 
