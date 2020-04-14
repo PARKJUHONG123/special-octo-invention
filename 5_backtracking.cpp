@@ -597,6 +597,8 @@ public:
 
 	~knapsack() {
 		delete[]prod;
+		delete[]include;
+		delete[]best_include;
 	}
 
 	void sort() {
