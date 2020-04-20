@@ -5,8 +5,14 @@ using namespace std;
 
 class sort {
 private:
+	struct data {
+		int key;
+		data* link;
+	};
+
 	int n;
 	int* S;
+	data* root;
 
 	void print_S() {
 		for (int i = 1; i <= n; i++) {
@@ -38,8 +44,22 @@ public:
 		}
 		fscanf_s(in, "%d", &n);
 		S = new int[n + 1];
+
 		for (int i = 1; i <= n; i++) {
 			fscanf_s(in, "%d", &S[i]);
+		}
+
+		root = new data;
+		root->key = -1;
+		root->link = nullptr;
+		data* before = root;
+
+		for (int i = 1; i <= n; i++) {
+			data* temp = new data;
+			temp->key = S[i];
+			temp->link = nullptr;
+			before->link = temp;
+			before = temp;
 		}
 	}
 
@@ -86,7 +106,6 @@ public:
 	}
 
 	void merge_iterative_function(int* unsorted, int *sorted, int iLeft, int iRight, int iEnd) {
-		bool left = false;
 		int i = iLeft, j = iRight;
 		int index = iLeft;
 		while (i < iRight && j < iEnd) {
@@ -104,7 +123,6 @@ public:
 		while (j < iEnd) {
 			sorted[index++] = unsorted[j++];
 		}
-
 	}
 
 	void merge_iterative() {
@@ -117,19 +135,43 @@ public:
 			copyArray(sorted, S, n);
 			print_S();
 		}
+		delete[] sorted;
 	}
 
 	void merge_linked() {
-
+		
 	}
 
-	void merge_huang_langston() {
+	void partition(int low, int high, int* pivot_point) {
+		int pivot_item = S[low];
+		int low_temp = low;
 
+		for (int i = low + 1; i <= high; i++) {
+			// i 와 low_temp 와 교환
+			if (S[i] < pivot_item) {
+				low_temp++;
+				exchange(&S[low_temp], &S[i]);
+			}
+			*pivot_point = low_temp;
+			exchange(&S[low], &S[*pivot_point]);
+		}
+	}
+
+	void quick_function(int low, int high) {
+		int pivot_point = -1;
+		if (low < high) {
+			partition(low, high, &pivot_point);
+			quick_function(low, pivot_point);
+			quick_function(pivot_point + 1, high);
+		}
 	}
 
 	void quick() {
-
+		// not stable
+		quick_function(1, n);
+		print_S();
 	}
+
 
 	void heap() {
 
@@ -146,6 +188,6 @@ public:
 
 int main() {
 	sort temp = sort();
-	temp.merge_iterative();
+	temp.quick();
 	return 0;
 }
