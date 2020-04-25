@@ -205,11 +205,7 @@ public:
 		print_S();
 	}
 
-	// 1
-	// 2 3
-	// 4 5
-
-	void heap_init(int index, int* heap_S) {
+	void add_heap_func(int index, int* heap_S) {
 		int temp_value = -1, temp_index = index;
 
 		while (temp_index / 2 > 0) {
@@ -224,7 +220,41 @@ public:
 
 	void add_heap(int index, int* heap_S, int value) {
 		heap_S[index] = value;
-		heap_init(index, heap_S);
+		add_heap_func(index, heap_S);
+	}
+
+	int big_value_index(int *heap_S, int a, int b) {
+		if (heap_S[a] > heap_S[b]) {
+			return a;
+		}
+		else {
+			return b;
+		}
+	}
+
+	void del_heap_func(int index, int *heap_S) {
+		int temp_index = 1, big_index = -1;
+		while (2 * temp_index <= index) {
+			if (2 * temp_index + 1 <= index) { //자식이 두개 있을 때
+				big_index = big_value_index(heap_S, 2 * temp_index, 2 * temp_index + 1);
+			}
+			else { //자식이 하나밖에 없음
+				big_index = 2 * temp_index;
+			}
+
+			if (heap_S[big_index] > heap_S[temp_index]) {
+				exchange(&heap_S[big_index], &heap_S[temp_index]);
+			}
+			temp_index = big_index;
+		}
+	}
+
+	void del_heap(int index, int* heap_S) {
+		cout << heap_S[1] << " ";
+		exchange(&heap_S[1], &heap_S[index]);
+		if (index > 1) {
+			del_heap_func(index - 1, heap_S);
+		}
 	}
 
 	void heap() {
@@ -235,23 +265,125 @@ public:
 		for (int i = 1; i <= n; i++) {
 			add_heap(i, heap_S, S[i]);
 		}
-		for (int i = 1; i <= n; i++) {
-			cout << heap_S[i] << " ";
+
+		for (int i = n; i >= 1; i--) {
+			del_heap(i, heap_S);
 		}
-		cout << endl;
+	}
+
+	int get_max_value() {
+		int result = S[1];
+		for (int i = 1; i <= n; i++) {
+			if (result < S[i]) {
+				result = S[i];
+			}
+		}
+		return result;
 	}
 
 	void count() {
+		// O(n + k)
+		// 뒤에서부터 loop 를 돌면 stable, 앞에서부터 돌면 unstable
 
+		int k = get_max_value();
+		int* result = new int[n + 1];
+		int* count = new int[k + 1];
+
+		for (int i = 1; i <= k; i++) {
+			count[i] = 0;
+		}
+
+		for (int j = 1; j <= n; j++) {
+			count[S[j]]++;
+		}
+
+		for (int i = 2; i <= k; i++) {
+			count[i] += count[i - 1];
+		}
+
+		/*
+			stability 를 위해서 뒤에서부터 loop 를 시작한다
+			예를 들어 1(1), 3, 6, 4, 1(2) 를 sort 할 때
+
+			# stable 한 sort
+			: 1(1), 1(2), 3, 4, 6	
+
+			# unstable 한 sort :
+			: 1(2), 1(1), 3, 4, 6
+		*/
+
+		for (int j = n; j >= 1; j--) {
+			result[count[S[j]]--] = S[j];
+		}
+
+		for (int i = 1; i <= n; i++) {
+			cout << result[i] << " ";
+		}
 	}
 
-	void radix() {
+	int get_max_size() {
+		int value = get_max_value();
+		int digit = 1, count = 0;
+		while (1) {
+			if (value / digit != 0) {
+				digit = digit * 10;
+				count = count + 1;
+			}
+			else {
+				break;
+			}
+		}
+		return count;
+	}
 
+	int get_digit_value(int m, int origin) {
+		int digit = 1, result = -1;
+		for (int i = 1; i < m; i++) {
+			digit *= 10;
+		}
+
+		result = (origin % (digit * 10)) - (origin % (digit));
+		return result / digit ;
+	}
+
+
+	void radix() {
+		// O(d(n + k))
+		int d = get_max_size(); // d == 1 : 1의자리, d == 2 : 10의 자리
+		int k = 10;
+		int* result = new int[n + 1];
+		int* count = new int[k + 1];
+
+		for (int m = 1; m <= d; m++) {
+			for (int i = 0; i <= k; i++) {
+				count[i] = 0;
+			}
+
+			for (int j = 1; j <= n; j++) {
+				count[get_digit_value(m, S[j])]++;
+			}
+
+			for (int i = 1; i <= k; i++) {
+				count[i] += count[i - 1];
+			}
+
+			for (int j = n; j >= 1; j--) {
+				int temp = get_digit_value(m, S[j]);
+				result[count[temp]--] = S[j];
+			}
+
+			for (int i = 1; i <= n; i++) {
+				S[i] = result[i];
+			}
+		}
+		for (int i = 1; i <= n; i++) {
+			cout << result[i] << " ";
+		}
 	}
 };
 
 int main() {
 	sort temp = sort();
-	temp.heap();
+	temp.radix();
 	return 0;
 }
